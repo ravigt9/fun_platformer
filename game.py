@@ -23,7 +23,8 @@ class Game:
             'velocity_y': 0,
             'jump_power': -15,
             'gravity': 0.8,
-            'is_jumping': False
+            'is_jumping': False,
+            'color': '#00f'  # Initial blue color
         }
         
         # Game properties
@@ -40,6 +41,18 @@ class Game:
         self.game_over = False
         self.level = 0
         self.multi_obstacle_chance = 0  # Chance to spawn multiple obstacles at once
+        self.player_colors = [
+            '#00f',  # Blue
+            '#0f0',  # Green
+            '#f00',  # Red
+            '#ff0',  # Yellow
+            '#f0f',  # Magenta
+            '#0ff',  # Cyan
+            '#f80',  # Orange
+            '#8f0',  # Lime
+            '#08f',  # Light Blue
+            '#f08'   # Pink
+        ]
 
     def generate_obstacle(self):
         # Different types of obstacles
@@ -87,7 +100,7 @@ class Game:
         # Chance to add additional obstacles based on multi_obstacle_chance
         if random.random() < self.multi_obstacle_chance:
             # Calculate minimum gap based on player size (125% of player width)
-            min_obstacle_gap = self.player['width'] * 1.25
+            min_obstacle_gap = self.player['width'] * 1.45
             
             # Add a second obstacle with proper spacing
             second_obstacle = random.choice(obstacle_types)()
@@ -97,7 +110,7 @@ class Game:
             obstacles_to_generate.append(second_obstacle)
         
         # Ensure minimum gap from previous obstacles
-        min_gap = max(120, self.player['width'] * 1.25)  # Use larger of default or player-based gap
+        min_gap = max(120, self.player['width'] * 1.45)  # Use larger of default or player-based gap
         if self.obstacles:
             last_obstacle = self.obstacles[-1]
             if self.width - last_obstacle['x'] < min_gap:
@@ -142,13 +155,13 @@ class Game:
             self.spawn_interval = random.randint(self.min_spawn_interval, self.max_spawn_interval)
         
         # Check collisions
-        player_rect = (self.player['x'], self.player['y'], 
-                      self.player['width'], self.player['height'])
+        player_rect = (int(self.player['x']), int(self.player['y']), 
+                      int(self.player['width']), int(self.player['height']))
         
         for obstacle in self.obstacles:
             if obstacle['type'] == 'rectangle':
-                obstacle_rect = (obstacle['x'], obstacle['y'],
-                               obstacle['width'], obstacle['height'])
+                obstacle_rect = (int(obstacle['x']), int(obstacle['y']),
+                               int(obstacle['width']), int(obstacle['height']))
                 if self.check_collision(player_rect, obstacle_rect):
                     self.game_over = True
                     return
@@ -158,9 +171,12 @@ class Game:
                     return
         
         # Increase difficulty every 1000 points
-        new_level = self.score // 500
+        new_level = self.score // 1000
         if new_level > self.level:
             self.level = new_level
+            # Update player color
+            self.player['color'] = self.player_colors[self.level % len(self.player_colors)]
+            
             # Increase speed (max 15)
             self.obstacle_speed = min(15, self.base_obstacle_speed + (self.level * 0.8))
             
@@ -177,16 +193,24 @@ class Game:
     def check_collision(self, rect1, rect2):
         x1, y1, w1, h1 = rect1
         x2, y2, w2, h2 = rect2
-        return (x1 < x2 + w2 and x1 + w1 > x2 and
-                y1 < y2 + h2 and y1 + h1 > y2)
+        # Ensure all coordinates are integers
+        x1, y1, w1, h1 = int(x1), int(y1), int(w1), int(h1)
+        x2, y2, w2, h2 = int(x2), int(y2), int(w2), int(h2)
+        
+        # Check for no overlap
+        if x1 + w1 <= x2 or x1 >= x2 + w2:
+            return False
+        if y1 + h1 <= y2 or y1 >= y2 + h2:
+            return False
+        return True
     
     def check_triangle_collision(self, player_rect, triangle):
         # Simplified triangle collision - treat it as a rectangle for now
         # but only use the top half of the height for better gameplay
-        triangle_rect = (triangle['x'], 
-                        triangle['y'] - triangle['height'],
-                        triangle['width'],
-                        triangle['height'] // 2)
+        triangle_rect = (int(triangle['x']), 
+                        int(triangle['y'] - triangle['height']),
+                        int(triangle['width']),
+                        int(triangle['height'] // 2))
         return self.check_collision(player_rect, triangle_rect)
     
     def get_state(self):

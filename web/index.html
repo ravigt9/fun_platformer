@@ -43,7 +43,7 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             // Draw player
-            ctx.fillStyle = '#00f';
+            ctx.fillStyle = gameState.player.color;
             ctx.fillRect(
                 gameState.player.x,
                 gameState.player.y,
@@ -79,7 +79,8 @@
             // Draw score
             ctx.fillStyle = '#000';
             ctx.font = '20px Arial';
-            ctx.fillText(`Score: ${gameState.score}`, 10, 30);
+            ctx.textAlign = 'left';
+            ctx.fillText(`Score: ${gameState.score}`, 20, 30);
 
             if (gameState.game_over) {
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
