@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Endless Runner</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #333;
+        }
+        canvas {
+            background: #fff;
+        }
+        #restartButton {
+            position: absolute;
+            padding: 10px 20px;
+            font-size: 18px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+        #restartButton:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <button id="restartButton">Restart Game</button>
+    <script src="/eel.js"></script>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const restartButton = document.getElementById('restartButton');
+        
+        function drawGame(gameState) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw player
+            ctx.fillStyle = '#00f';
+            ctx.fillRect(
+                gameState.player.x,
+                gameState.player.y,
+                gameState.player.width,
+                gameState.player.height
+            );
+            
+            // Draw obstacles
+            for (const obstacle of gameState.obstacles) {
+                if (obstacle.type === 'rectangle') {
+                    ctx.fillStyle = '#f00';
+                    ctx.fillRect(
+                        obstacle.x,
+                        obstacle.y,
+                        obstacle.width,
+                        obstacle.height
+                    );
+                } else if (obstacle.type === 'triangle') {
+                    ctx.fillStyle = '#f00';
+                    ctx.beginPath();
+                    ctx.moveTo(obstacle.x, obstacle.y);
+                    ctx.lineTo(obstacle.x + obstacle.width, obstacle.y);
+                    ctx.lineTo(obstacle.x + obstacle.width/2, obstacle.y - obstacle.height);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+            
+            // Draw ground
+            ctx.fillStyle = '#333';
+            ctx.fillRect(0, gameState.player.y + gameState.player.height, canvas.width, 2);
+            
+            // Draw score
+            ctx.fillStyle = '#000';
+            ctx.font = '20px Arial';
+            ctx.fillText(`Score: ${gameState.score}`, 10, 30);
+
+            if (gameState.game_over) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#fff';
+                ctx.font = '48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Game Over!', canvas.width/2, canvas.height/2);
+                ctx.font = '24px Arial';
+                ctx.fillText(`Final Score: ${gameState.score}`, canvas.width/2, canvas.height/2 + 40);
+                restartButton.style.display = 'block';
+            } else {
+                restartButton.style.display = 'none';
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                eel.jump()();
+            }
+        });
+
+        restartButton.addEventListener('click', () => {
+            eel.restart_game()();
+        });
+
+        eel.expose(updateGame);
+        function updateGame(gameState) {
+            drawGame(gameState);
+        }
+    </script>
+</body>
+</html> 
